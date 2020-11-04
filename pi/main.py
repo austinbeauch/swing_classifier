@@ -86,7 +86,6 @@ def main():
     plt.show()
     
     if input("\nSave run? y/[n]: ").lower() == "y":
-
         shot_type = input(HELP_STRING + "\nShot type?: ")
         distance = input("Distance (yards)?: ")
         save_to_csv(data_matrix, columns, shot_type, distance)
