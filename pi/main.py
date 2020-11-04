@@ -19,6 +19,18 @@ from pi_utils import *
 
 #some MPU6050 Registers and their Address
 
+HELP_STRING = """
+0 - Pull-hook  (left->left)
+1 - Hook       (right->left)
+2 - Pull       (left)
+3 - Fade       (left->middle)
+4 - Straight
+5 - Draw       (right->middle)
+6 - Push       (left)
+7 - Slice      (left->right)
+8 - Push-slice (left->left)
+"""
+
 def main():
     try:
         mpu = MPU6050(0x68)
@@ -68,15 +80,16 @@ def main():
     print(runtime)
     data_matrix = np.array(data)
     print(data_matrix.shape)
-
-    print(count)
-    print(count/ runtime)
+    print(count/runtime)
 
     plot_data(data, columns)
     plt.show()
     
-    if input("Save run? y/[n]: ").lower() == "y":
-        save_to_csv(data_matrix, columns)
+    if input("\nSave run? y/[n]: ").lower() == "y":
+
+        shot_type = input(HELP_STRING + "\nShot type?: ")
+        distance = input("Distance (yards)?: ")
+        save_to_csv(data_matrix, columns, shot_type, distance)
     else:
         print("Not saved.")
     

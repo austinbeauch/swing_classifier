@@ -84,9 +84,12 @@ def print_values(vals, count):
         "\tAz=%.2f g" % Az, 
         "iter: %d" % count)     
 
-def save_to_csv(data, columns):
+def save_to_csv(data, columns, shot_type, distance):
     now = datetime.now()
-    current_time = now.strftime("%H:%M:%S_%d_%m_%y")
-    filename = "data/" + current_time + ".csv"
-    pd.DataFrame(data, columns=columns).to_csv(filename)
+    current_time = now.strftime("%H:%M:%S_%d_%m")
+    filename = f"../data/{current_time}.csv"
+    df = pd.DataFrame(data, columns=columns)
+    df["distance"] = distance
+    df["shot_type"] = shot_type
+    df.to_csv(filename)
     print("Saved", filename)
