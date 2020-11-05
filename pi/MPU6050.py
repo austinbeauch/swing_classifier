@@ -6,7 +6,11 @@ Copyright 2015
 """
 # https://github.com/nickcoutsos/MPU-6050-Python/blob/master/MPU6050.py
 
-import smbus
+try:
+    import smbus
+except ModuleNotFoundError:
+    print("smbus not found, generating fake data.")
+    
 
 class MPU6050:
 
@@ -208,6 +212,7 @@ class MPU6050:
         gx, gy, gz = self.get_gyro_data()
         return ax, ay, az, gx, gy, gz
 
+    
 if __name__ == "__main__":
     mpu = MPU6050(0x68)
     print(mpu.get_temp())

@@ -24,7 +24,7 @@ def print_values(vals, count):
     
 def save_to_csv(data, columns, shot_type, distance):
     now = datetime.now()
-    current_time = now.strftime("%H:%M:%S_%d_%m")
+    current_time = now.strftime("%d_%m_%H:%M:%S")
     filename = f"../data/{current_time}.csv"
     df = pd.DataFrame(data, columns=columns)
     df["distance"] = distance
