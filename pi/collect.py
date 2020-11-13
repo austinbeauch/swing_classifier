@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 
 from pi_utils import *
 
-#some MPU6050 Registers and their AddressÅ
 
 HELP_STRING = """
 0 - Pull-hook  (left->left)
@@ -128,5 +127,6 @@ def plot_data(data, columns):
     plt.pause(0.0000001)
     plt.clf()
 
+    
 if __name__ == "__main__":
     main()
