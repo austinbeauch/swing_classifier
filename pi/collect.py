@@ -31,7 +31,7 @@ HELP_STRING = """
 """
 
 HIT_THRESH = 4
-WINDOW_SIZE = 50
+WINDOW_SIZE = 500
 
 def save_swing(data_matrix, columns):
     if input("\nSave run? y/[n]: ").lower() == "y":
@@ -44,8 +44,8 @@ def save_swing(data_matrix, columns):
 def main():
     try:
         mpu = MPU6050(0x68)
-        mpu.set_accel_range(MPU6050.ACCEL_RANGE_8G)
-        mpu.set_gyro_range(MPU6050.GYRO_RANGE_500DEG)
+        mpu.set_accel_range(MPU6050.ACCEL_RANGE_16G)
+        mpu.set_gyro_range(MPU6050.GYRO_RANGE_2000DEG)
         data_func = mpu.get_movement_data
 
     except NameError as ex:
@@ -55,9 +55,9 @@ def main():
         print("#############################")
         data_func = get_fake_data
 
-    live = True
+    live = False
     verbose = False
-    print_interval = 1
+    print_interval = 100
     draw_interval = 1 # how many collections between plots
     # plt.ion()
 
@@ -87,8 +87,10 @@ def main():
                 if detect_swing:
                     # time to save
                     print("Saving...")
+                    # plot_data(data, columns)
                     data_matrix = np.array(data)
                     save_swing(data_matrix, columns)
+                    
                     print("Continuing...")
                     detect_swing = False
                     data = []
@@ -96,7 +98,7 @@ def main():
                 else:
                     data.pop(0)            
             
-            if abs(values[0]) >= HIT_THRESH:
+            if abs(values[0]) >= HIT_THRESH and not detect_swing:
                 print("swing detected")
                  # detected a swing, during the midpoint (probably)
                 detect_swing = True 
@@ -119,7 +121,8 @@ def main():
     
 def plot_data(data, columns):
     data_matrix = np.array(data).T
-    for i in range(1):
+    print(data_matrix.shape)
+    for i in range(6):
         plt.subplot(2,3,i+1)
         plt.title(columns[i])
         plt.plot(data_matrix[i])
