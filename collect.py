@@ -42,9 +42,9 @@ def save_swing(data_matrix, columns):
 def main(mode):
     
     if mode == "infer":
-        X_mean == np.load("norm_data/X_mean.npy")
-        X_std == np.load("norm_data/X_std.npy")    
-        model = BadModel()
+        X_mean = np.load("norm_data/X_mean.npy")
+        X_std = np.load("norm_data/X_std.npy")    
+        model = BadModel(5, 1, 3)
         model.load_state_dict(torch.load("weights/best_model.pth")["model"])
         model.eval()
         
@@ -104,10 +104,10 @@ def main(mode):
                     else:
                         data.pop(0)            
                     
-                    elif mode == "infer":
-                        data_matrix = (data_matrix - X_mean) / X_std
-                        # model(data_matrix)
-                        pass
+                elif mode == "infer":
+                    data_matrix = (data_matrix - X_mean) / X_std
+                    # model(data_matrix)
+                    pass
             
             if abs(values[0]) >= HIT_THRESH and not detect_swing:
                 print("swing detected")
