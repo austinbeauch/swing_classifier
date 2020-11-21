@@ -28,7 +28,7 @@ HELP_STRING = """
 8 - Push-slice (left->left)
 """
 
-HIT_THRESH = 4
+HIT_THRESH = 2
 WINDOW_SIZE = 500
 
 def save_swing(data_matrix, columns):
@@ -42,8 +42,11 @@ def save_swing(data_matrix, columns):
 def main(mode):
     
     if mode == "infer":
+        shot_types = ["Pull-hook", "Hook", "Pull", "Fade", "Straight", "Draw", "Push", "Slice" , "Push-slice"]
         X_mean = np.load("norm_data/X_mean.npy")
         X_std = np.load("norm_data/X_std.npy")    
+        y_mean = np.load("norm_data/y_mean.npy")    
+        y_std = np.load("norm_data/y_std.npy")    
         model = BadModel(5, 1, 3)
         model.load_state_dict(torch.load("weights/best_model.pth")["model"])
         model.eval()
@@ -101,16 +104,25 @@ def main(mode):
                         detect_swing = False
                         data = []
                         count = 0  # TODO: REMOVE probably
+
                     else:
-                        data.pop(0)            
-                    
-                elif mode == "infer":
-                    data_matrix = (data_matrix - X_mean) / X_std
-                    # model(data_matrix)
-                    pass
+                        data.pop(0)          
+
+                    if mode == "infer":
+                        data_matrix = data_matrix.T
+                        data_matrix = (data_matrix - X_mean) / X_std
+                        print(data_matrix.shape)
+                        pred = model(torch.from_numpy(data_matrix).unsqueeze(0).float())
+                        pred = pred.detach().numpy()
+                        dist = pred[0][-1] * y_std + y_mean
+                        shot = np.argmax(pred[:,:-1])
+                        print(f"Predicted swing type: {shot_types[shot]}, {int(dist)}yds")
+                        detect_swing = False
+                        data = []
+
             
             if abs(values[0]) >= HIT_THRESH and not detect_swing:
-                print("swing detected")
+                print("Swing detected")
                  # detected a swing, during the midpoint (probably)
                 detect_swing = True 
                 
