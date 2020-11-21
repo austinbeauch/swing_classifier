@@ -1,21 +1,19 @@
-'''
-        Read Gyro and Accelerometer by Interfacing Raspberry Pi with MPU6050 using Python
-    http://www.electronicwings.com
-'''
+import time
+import argparse
 
-from MPU6050 import MPU6050
+from pi.MPU6050 import MPU6050
 
 try:
     import smbus
 except ModuleNotFoundError:
     print("smbus not found, generating fake data.")
     
-
-import time
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pi_utils import *
+from model import BadModel
+from pi.pi_utils import *
 
 
 HELP_STRING = """
@@ -41,7 +39,15 @@ def save_swing(data_matrix, columns):
     else:
         print("Not saved.")
 
-def main():
+def main(mode):
+    
+    if mode == "infer":
+        X_mean == np.load("norm_data/X_mean.npy")
+        X_std == np.load("norm_data/X_std.npy")    
+        model = BadModel()
+        model.load_state_dict(torch.load("weights/best_model.pth")["model"])
+        model.eval()
+        
     try:
         mpu = MPU6050(0x68)
         mpu.set_accel_range(MPU6050.ACCEL_RANGE_16G)
@@ -85,18 +91,23 @@ def main():
             # if there is a swing detected and our list is full, then we've collected the full sample and can save
             if len(data) >= WINDOW_SIZE:
                 if detect_swing:
-                    # time to save
-                    print("Saving...")
-                    # plot_data(data, columns)
                     data_matrix = np.array(data)
-                    save_swing(data_matrix, columns)
+                    if mode == "collect":
+                        print("Saving...")
+                        # plot_data(data, columns)
+                        save_swing(data_matrix, columns)
+                        print("Continuing...")
+                        
+                        detect_swing = False
+                        data = []
+                        count = 0  # TODO: REMOVE probably
+                    else:
+                        data.pop(0)            
                     
-                    print("Continuing...")
-                    detect_swing = False
-                    data = []
-                    count = 0  # TODO: REMOVE probably
-                else:
-                    data.pop(0)            
+                    elif mode == "infer":
+                        data_matrix = (data_matrix - X_mean) / X_std
+                        # model(data_matrix)
+                        pass
             
             if abs(values[0]) >= HIT_THRESH and not detect_swing:
                 print("swing detected")
@@ -132,4 +143,8 @@ def plot_data(data, columns):
 
     
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Golf swing collection/inference.')
+    parser.add_argument('--mode', '-m', dest='mode', choices=["collect", "infer"], default="collect",
+                        help='Run in collection mode or inference mode (default collection)')
+    args = parser.parse_args()
+    main(args.mode)
