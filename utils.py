@@ -4,6 +4,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
 
 def plot_swing(swing_data, shot_type=None, dist=None):
     """
@@ -39,7 +43,9 @@ def load_data(path):
     X_data = np.array(X_data)
     y_data = np.array(y_data)
     
-    return X_data, y_data
+    return unison_shuffled_copies(X_data, y_data)
 
-def plot_counts(y):
-    pd.Series(np.argmax(y[:, :-1],axis=1)).value_counts(sort=False).plot.bar().set(ylabel="Count")
+def plot_counts(y, xticks_label):
+    ax = pd.Series(np.argmax(y[:, :-1],axis=1)).value_counts(sort=False).plot.bar()
+    ax.set(ylabel="Count")
+    ax.set_xticklabels(xticks_label)
