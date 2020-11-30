@@ -1,8 +1,41 @@
 import numpy as np
+import pandas as pd
 
 
 def norm(x, m, s):
     return (x - m) / s
+
+
+def unison_shuffled_copies(a, b):
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
+
+def oversample(X_data, y_data):
+    labels = np.argmax(y_data[:, :-1],axis=1)
+    counts = pd.Series(labels).value_counts(sort=False)
+    max_count = counts.max()
+
+    new_X = []
+    new_y = []
+    for c, class_count in enumerate(counts):
+        num_data_to_add = max_count - class_count
+        q = num_data_to_add // class_count
+        r = num_data_to_add % class_count
+        X_c = X_data[labels == c].copy()
+        y_c = y_data[labels == c].copy()
+        
+        # duplicate all minority classes
+        new_X_c = np.concatenate((X_c, np.tile(X_c, (q, 1, 1)), X_c[:r,:,:])) 
+        new_y_c = np.concatenate((y_c, np.tile(y_c, (q, 1)), y_c[:r,:]))
+        
+        new_X.append(new_X_c)
+        new_y.append(new_y_c)
+
+    new_X = np.vstack(new_X)
+    new_y = np.vstack(new_y)
+    
+    return unison_shuffled_copies(new_X, new_y)
 
 
 
