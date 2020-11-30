@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 
 class BadModel(nn.Module):
@@ -66,3 +67,48 @@ class BadModel(nn.Module):
         x = torch.cat([swing_type, x[:,-1:]], axis=1)
         
         return x
+
+
+class BadModel2(nn.Module):
+
+    def __init__(self):
+        super(BadModel2, self).__init__()
+        # kernel
+        self.conv1 = nn.Conv2d(1, 10, (3, 20), stride=(3, 5))
+        self.conv2 = nn.Conv2d(10, 16, (2, 15), stride=(1, 3))
+
+        self.fc1_cls = nn.Linear(16 * 6, 120)  
+        self.fc2_cls = nn.Linear(120, 84)
+        self.fc3_cls = nn.Linear(84, 9)
+        
+        self.fc1_dist = nn.Linear(16 * 6, 50)
+        self.fc2_dist = nn.Linear(50, 1)
+
+    def forward(self, x):
+        
+        x = x.view(x.shape[0], 1, x.shape[1], x.shape[2])
+
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, (1,2))
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, (1,2))
+                        
+        x = x.view(-1, self.num_flat_features(x))
+        
+        x_cls = F.relu(self.fc1_cls(x))
+        x_cls = F.relu(self.fc2_cls(x_cls))
+        x_cls = self.fc3_cls(x_cls)
+        
+        x_dist = F.relu(self.fc1_dist(x))
+        x_dist = self.fc2_dist(x_dist)
+
+        x = torch.cat([x_cls, x_dist], axis=1)
+        
+        return x
+
+    def num_flat_features(self, x):
+        size = x.size()[1:]  
+        num_features = 1
+        for s in size:
+            num_features *= s
+        return num_features

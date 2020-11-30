@@ -1,17 +1,8 @@
 import numpy as np
 import pandas as pd
+from utils import unison_shuffled_copies
 
-
-def norm(x, m, s):
-    return (x - m) / s
-
-
-def unison_shuffled_copies(a, b):
-    assert len(a) == len(b)
-    p = np.random.permutation(len(a))
-    return a[p], b[p]
-
-def oversample(X_data, y_data):
+def oversample_minority(X_data, y_data):
     labels = np.argmax(y_data[:, :-1],axis=1)
     counts = pd.Series(labels).value_counts(sort=False)
     max_count = counts.max()
@@ -37,13 +28,22 @@ def oversample(X_data, y_data):
     
     return unison_shuffled_copies(new_X, new_y)
 
+def norm(x, m, s):
+    return (x - m) / s
 
+def augment(X):
+    return np.roll(X * np.random.uniform(low=0.8, high=1.1), np.random.randint(-150,150), axis = -1)
 
 class SKLSwingDataset():
-    def __init__(self, X_data, y_data, mean=None, std=None, y_mean=None, y_std=None):
+    def __init__(self, X_data, y_data, mean=None, std=None, y_mean=None, y_std=None, augment=False, oversample=False):
         super().__init__()
+        self.oversample = oversample
+        if self.oversample:
+            X_data, y_data = oversample_minority(X_data, y_data)
+            
         self.X_data = X_data
         self.y_data = y_data
+        self.augment = augment
                 
         
         if mean is None: # assume that all the other values are None as well, this is the training set and we need to compute the mean/std
@@ -64,7 +64,9 @@ class SKLSwingDataset():
         X = self.X_data[idx].clone()  
         y = self.y_data[idx].clone()
         
-                
+        if self.augment:
+            X = augment(X)
+            
         X = norm(X, self.mean, self.std)
         y[-1] = norm(y[-1], self.y_dist_mean, self.y_dist_std) 
         

@@ -1,13 +1,10 @@
 import torch
 import numpy as np
 import pandas as pd
+from utils import unison_shuffled_copies
 
-def unison_shuffled_copies(a, b):
-    assert len(a) == len(b)
-    p = np.random.permutation(len(a))
-    return a[p], b[p]
 
-def oversample(X_data, y_data):
+def oversample_minority(X_data, y_data):
     labels = np.argmax(y_data[:, :-1],axis=1)
     counts = pd.Series(labels).value_counts(sort=False)
     max_count = counts.max()
@@ -37,15 +34,18 @@ def norm(x, m, s):
     return (x - m) / s
 
 def augment(X):
-    return torch.roll(X * np.random.uniform(low=0.8, high=1.1), np.random.randint(-150,150))
+    return torch.roll(X * np.random.uniform(low=0.8, high=1.1), np.random.randint(-150,150), dims = -1)
 
 class SwingDataset(torch.utils.data.Dataset):
-    def __init__(self, X_data, y_data, mean=None, std=None, y_mean=None, y_std=None, augment=False):
+    def __init__(self, X_data, y_data, mean=None, std=None, y_mean=None, y_std=None, augment=False, oversample=False):
         super().__init__()
+        self.oversample = oversample
+        if self.oversample:
+            X_data, y_data = oversample_minority(X_data, y_data)
+            
         self.X_data = torch.Tensor(X_data)
         self.y_data = torch.Tensor(y_data)
         self.augment = augment
-        
         
         if mean is None: # assume that all the other values are None as well, this is the training set and we need to compute the mean/std
             self.mean = X_data.mean(axis=0)
