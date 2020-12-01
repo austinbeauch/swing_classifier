@@ -74,15 +74,21 @@ class BadModel2(nn.Module):
     def __init__(self):
         super(BadModel2, self).__init__()
         # kernel
-        self.conv1 = nn.Conv2d(1, 10, (3, 20), stride=(3, 5))
-        self.conv2 = nn.Conv2d(10, 16, (2, 15), stride=(1, 3))
-
-        self.fc1_cls = nn.Linear(16 * 6, 120)  
-        self.fc2_cls = nn.Linear(120, 84)
-        self.fc3_cls = nn.Linear(84, 9)
+        self.conv1 = nn.Conv2d(1, 28, (3, 5), stride=(3, 1))
+        self.conv2 = nn.Conv2d(28, 56, (2, 5), stride=(1, 1))
+        self.conv3 = nn.Conv2d(56, 56, (1, 5), stride=(1, 1))
         
-        self.fc1_dist = nn.Linear(16 * 6, 50)
-        self.fc2_dist = nn.Linear(50, 1)
+        self.fc1_cls = nn.Linear(56 * 59, 512)  
+        self.fc2_cls = nn.Linear(512, 256)
+        self.fc3_cls = nn.Linear(256, 128)
+        self.fc4_cls = nn.Linear(128, 9)
+        # self.softmax = nn.Softmax(dim=1)
+        
+        self.fc1_dist = nn.Linear(56 * 59, 256)
+        self.fc2_dist = nn.Linear(256, 128)
+        self.fc3_dist = nn.Linear(128, 1)
+        
+        self.dropout = nn.Dropout(0)
 
     def forward(self, x):
         
@@ -92,15 +98,25 @@ class BadModel2(nn.Module):
         x = F.max_pool2d(x, (1,2))
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, (1,2))
+        x = F.relu(self.conv3(x))
+        x = F.max_pool2d(x, (1,2))
                         
         x = x.view(-1, self.num_flat_features(x))
         
         x_cls = F.relu(self.fc1_cls(x))
+        x_cls = self.dropout(x_cls)
         x_cls = F.relu(self.fc2_cls(x_cls))
-        x_cls = self.fc3_cls(x_cls)
-        
+        x_cls = self.dropout(x_cls)
+        x_cls = F.relu(self.fc3_cls(x_cls))
+        x_cls = self.dropout(x_cls)
+        x_cls = self.fc4_cls(x_cls)
+        # x_cls = self.softmax(x_cls)
+
         x_dist = F.relu(self.fc1_dist(x))
-        x_dist = self.fc2_dist(x_dist)
+        x_cls = self.dropout(x_dist)
+        x_dist = F.relu(self.fc2_dist(x_dist))
+        x_cls = self.dropout(x_dist)
+        x_dist = self.fc3_dist(x_dist)
 
         x = torch.cat([x_cls, x_dist], axis=1)
         
