@@ -113,13 +113,13 @@ class BadModel2(nn.Module):
         # x_cls = self.softmax(x_cls)
 
         x_dist = F.relu(self.fc1_dist(x))
-        x_cls = self.dropout(x_dist)
+        x_dist = self.dropout(x_dist)
         x_dist = F.relu(self.fc2_dist(x_dist))
-        x_cls = self.dropout(x_dist)
+        x_dist = self.dropout(x_dist)
         x_dist = self.fc3_dist(x_dist)
 
         x = torch.cat([x_cls, x_dist], axis=1)
-        
+
         return x
 
     def num_flat_features(self, x):
