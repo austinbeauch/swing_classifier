@@ -1,7 +1,7 @@
 import time
 import argparse
 
-from pi.MPU6050 import MPU6050
+from MPU6050 import MPU6050
 
 try:
     import smbus
@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from model import BadModel
-from pi.pi_utils import *
+from pi_utils import *
 
 
 HELP_STRING = """
